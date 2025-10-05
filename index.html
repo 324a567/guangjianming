@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>广建阿铭代拿物品尺寸判断</title>
+    <!-- 外部资源 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- Tailwind配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB', 
+                        small: '#3B82F6',    
+                        medium: '#10B981',  
+                        large: '#F97316',   
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03)',
+                        'hover': '0 20px 40px -5px rgba(0, 0, 0, 0.12), 0 8px 12px -4px rgba(0, 0, 0, 0.05)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto { content-visibility: auto; }
+            .bg-gradient-main { background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); }
+            .bg-small { background: linear-gradient(120deg, #EFF6FF 0%, #DBEAFE 100%); }
+            .bg-medium { background: linear-gradient(120deg, #ECFDF5 0%, #D1FAE5 100%); }
+            .bg-large { background: linear-gradient(120deg, #FFF7ED 0%, #FFEDD5 100%); }
+            .transition-all-400 { transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1); }
+            .text-gradient { background-clip: text; -webkit-background-clip: text; color: transparent; background-image: linear-gradient(90deg, #2563EB, #3B82F6); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-main min-h-screen font-inter text-dark">
+    <div class="container mx-auto px-4 py-8 md:py-16 max-w-5xl">
+        <!-- 品牌标题区 -->
+        <header class="text-center mb-10 md:mb-16">
+            <div class="inline-block mb-4 p-3 rounded-full bg-white/60 backdrop-blur-sm shadow-sm">
+                <i class="fa fa-hand-paper-o text-primary text-3xl"></i>
+            </div>
+            <h1 class="text-[clamp(2rem,6vw,3.5rem)] font-bold mb-4 tracking-tight text-gradient">
+                广建阿铭代拿
+            </h1>
+            <p class="text-[clamp(1.1rem,3vw,1.3rem)] text-gray-600 max-w-2xl mx-auto font-medium">
+                物品尺寸智能判断工具
+            </p>
+            <p class="text-gray-500 mt-3 text-sm md:text-base">
+                输入物品名称，1秒识别小件/中件/大件
+            </p>
+        </header>
+        
+        <!-- 核心功能区 -->
+        <main class="bg-white rounded-2xl shadow-card p-6 md:p-8 mb-8 transform hover:shadow-hover transition-all-400">
+            <!-- 输入区域 -->
+            <div class="mb-10">
+                <label for="itemInput" class="block text-gray-700 text-lg font-medium mb-3">
+                    请输入您要代拿的物品
+                </label>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <input 
+                        type="text" 
+                        id="itemInput" 
+                        placeholder="例如：耳机、电风扇、鱼缸、笔记本电脑" 
+                        class="flex-grow px-6 py-4 border border-gray-200 rounded-xl focus:ring-3 focus:ring-primary/30 focus:border-primary outline-none transition-all-400 text-base"
+                    >
+                    <button 
+                        id="checkButton" 
+                        class="bg-primary hover:bg-primary/90 text-white font-semibold px-8 py-4 rounded-xl transition-all-400 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                    >
+                        <i class="fa fa-search text-lg"></i>
+                        <span class="text-base">判断尺寸</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 结果展示区 -->
+            <div id="resultArea" class="hidden">
+                <div id="resultCard" class="p-6 md:p-8 rounded-2xl border-2 transition-all-400">
+                    <div class="flex flex-col md:flex-row items-center gap-4 md:gap-6 mb-4">
+                        <div id="resultIcon" class="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl shadow-md"></div>
+                        <div>
+                            <h2 id="resultTitle" class="text-2xl md:text-3xl font-bold text-dark"></h2>
+                            <p id="resultSubtitle" class="text-gray-500 mt-1"></p>
+                        </div>
+                    </div>
+                    <p id="resultDescription" class="text-gray-600 text-lg md:text-xl leading-relaxed"></p>
+                </div>
+            </div>
+            
+            <!-- 尺寸标准 -->
+            <div class="mt-10 pt-8 border-t border-gray-100">
+                <h3 class="text-xl font-semibold text-dark mb-6 text-center">尺寸判断标准</h3>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="bg-small rounded-xl p-5 border border-blue-100 shadow-sm hover:shadow-md transition-all-400">
+                        <div class="flex items-center gap-3 text-small mb-3">
+                            <i class="fa fa-book text-2xl"></i>
+                            <h4 class="font-bold text-lg">小件</h4>
+                        </div>
+                        <p class="text-gray-600 text-sm md:text-base">
+                            类似手机、耳机、书本大小，重量较轻（5公斤以下），单手可轻松携带。
+                        </p>
+                    </div>
+                    <div class="bg-medium rounded-xl p-5 border border-green-100 shadow-sm hover:shadow-md transition-all-400">
+                        <div class="flex items-center gap-3 text-medium mb-3">
+                            <i class="fa fa-box text-2xl"></i>
+                            <h4 class="font-bold text-lg">中件</h4>
+                        </div>
+                        <p class="text-gray-600 text-sm md:text-base">
+                            类似微波炉、电饭煲、20寸行李箱大小，重量中等（5-20公斤），需双手搬运。
+                        </p>
+                    </div>
+                    <div class="bg-large rounded-xl p-5 border border-orange-100 shadow-sm hover:shadow-md transition-all-400">
+                        <div class="flex items-center gap-3 text-large mb-3">
+                            <i class="fa fa-cube text-2xl"></i>
+                            <h4 class="font-bold text-lg">大件</h4>
+                        </div>
+                        <p class="text-gray-600 text-sm md:text-base">
+                            类似冰箱、洗衣机、床垫大小，重量较大（20公斤以上），通常需要两人协作搬运。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- 声明区域 -->
+        <div class="bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl p-6 mb-10 shadow-sm">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 text-center">服务说明</h3>
+            <ul class="space-y-3 text-gray-700">
+                <li class="flex items-start gap-3">
+                    <i class="fa fa-exclamation-circle text-amber-500 mt-1 flex-shrink-0"></i>
+                    <span>贵重物品及高价值物品不承接代拿服务</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <i class="fa fa-info-circle text-primary mt-1 flex-shrink-0"></i>
+                    <span>最终解释权归广建阿铭所有</span>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- 常见物品示例 -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-dark mb-8 text-center">常见物品示例</h2>
+            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 md:gap-6">
+                <button class="example-btn bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all-400 border border-blue-50 text-center flex flex-col items-center gap-2 hover:scale-105">
+                    <i class="fa fa-headphones text-small text-2xl"></i>
+                    <p class="text-sm font-medium">耳机</p>
+                </button>
+                <button class="example-btn bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all-400 border border-blue-50 text-center flex flex-col items-center gap-2 hover:scale-105">
+                    <i class="fa fa-mobile text-small text-2xl"></i>
+                    <p class="text-sm font-medium">手机</p>
+                </button>
+                <button class="example-btn bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all-400 border border-blue-50 text-center flex flex-col items-center gap-2 hover:scale-105">
+                    <i class="fa fa-clock-o text-small text-2xl"></i>
+                    <p class="text-sm font-medium">手表</p>
+                </button>
+                <button class="example-btn bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all-400 border border-green-50 text-center flex flex-col items-center gap-2 hover:scale-105">
+                    <i class="fa fa-laptop text-medium text-2xl"></i>
+                    <p class="text-sm font-medium">笔记本</p>
+                </button>
+                <button class="example-btn bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all-400 border border-green-50 text-center flex flex-col items-center gap-2 hover:scale-105">
+                    <i class="fa fa-coffee text-medium text-2xl"></i>
+                    <p class="text-sm font-medium">咖啡机</p>
+                </button>
+                <button class="example-btn bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all-400 border border-green-50 text-center flex flex-col items-center gap-2 hover:scale-105">
+                    <i class="fa fa-suitcase text-medium text-2xl"></i>
+                    <p class="text-sm font-medium">小行李箱</p>
+                </button>
+                <button class="example-btn bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all-400 border border-orange-50 text-center flex flex-col items-center gap-2 hover:scale-105">
+                    <i class="fa fa-television text-large text-2xl"></i>
+                    <p class="text-sm font-medium">电视机</p>
+                </button>
+                <button class="example-btn bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all-400 border border-orange-50 text-center flex flex-col items-center gap-2 hover:scale-105">
+                    <i class="fa fa-snowflake-o text-large text-2xl"></i>
+                    <p class="text-sm font-medium">冰箱</p>
+                </button>
+                <button class="example-btn bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all-400 border border-orange-50 text-center flex flex-col items-center gap-2 hover:scale-105">
+                    <i class="fa fa-bed text-large text-2xl"></i>
+                    <p class="text-sm font-medium">床垫</p>
+                </button>
+                <button class="example-btn bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all-400 border border-orange-50 text-center flex flex-col items-center gap-2 hover:scale-105">
+                    <i class="fa fa-fish text-large text-2xl"></i>
+                    <p class="text-sm font-medium">鱼缸</p>
+                </button>
+            </section>
+            
+            <!-- 页脚 -->
+            <footer class="text-center text-gray-500 text-sm py-6 border-t border-gray-200/50">
+                <p>© 2025 广建阿铭代拿 · 物品尺寸判断工具</p>
+            </footer>
+        </div>
+        
+        <!-- 核心判断逻辑（已优化重量判断） -->
+        <script>
+            const itemSizeDatabase = {
+                小件: [
+                    "耳机", "手机", "手表", "钱包", "钥匙", "眼镜", "笔", "笔记本", 
+                    "书籍", "杂志", "U盘", "充电器", "充电宝", "小型相机", "首饰", 
+                    "口红", "粉饼", "小化妆品", "打火机", "香烟", "存储卡", "电池", 
+                    "小型玩具", "明信片", "信件", "小型工具", "红外遥控器", "蓝牙适配器",
+                    "SIM卡", "隐形眼镜护理液", "耳塞", "鼻毛修剪器", "假睫毛", "印泥",
+                    "修正液", "打孔器", "卷笔刀", "袖扣", "领针", "假发片", "鞋带", 
+                    "胸针", "发网", "香料包", "保健品", "速溶汤", "蜂蜜小包", "酵母片",
+                    "门挡", "烛台", "香薰片", "纽扣", "别针", "小挂钩", "创可贴", 
+                    "感冒药", "体温计", "口罩", "棉签", "血压计袖带", "针灸针", 
+                    "助听器", "假牙清洁剂", "小刀", "指甲剪", "螺丝刀（小型）", 
+                    "卷尺", "剥线钳", "迷你锯", "测电笔", "精密镊子"
+                ],
+                中件: [
+                    "笔记本电脑", "平板电脑", "相机", "小型打印机", "电饭煲", "微波炉",
+                    "电风扇", "电熨斗", "小型音箱", "鞋盒", "小型背包", "中型书包",
+                    "吹风机", "卷发棒", "小型烤箱", "游戏机", "中型玩具", "厨房用具套装",
+                    "小型健身器材", "行李箱（小）", "小型家电", "桌面摆件", "灯具（小型）",
+                    "咖啡机", "空气炸锅", "酸奶机", "面条机", "面包机", "扫描仪",
+                    "投影仪（小型）", "绘图板", "录音笔", "乐器包", "摄影包", "工具箱",
+                    "化妆箱", "渔具包", "台灯", "四件套", "窗帘", "小地毯", "装饰画",
+                    "衣帽架", "小鞋柜", "首饰盒", "收纳架", "装饰花瓶", "炒锅", "汤锅",
+                    "餐具套装", "切菜板", "厨房秤", "研磨机", "榨汁机", "电煮锅", "保温杯",
+                    "瑜伽垫", "哑铃（小型）", "羽毛球拍", "跳绳", "握力器", "平衡垫",
+                    "健腹轮", "弹力带", "腕力球", "婴儿车（小型）", "奶瓶消毒器", 
+                    "婴儿澡盆", "婴儿餐椅", "温奶器", "吸奶器", "婴儿围栏"
+                ],
+                大件: [
+                    "冰箱", "洗衣机", "电视机", "空调", "床垫", "沙发", "衣柜",
+                    "餐桌", "椅子", "书桌", "跑步机", "自行车", "大型行李箱",
+                    "婴儿车", "家具", "大型家电", "乐器（大型）", "行李箱（大）",
+                    "床架", "电视（大屏幕）", "按摩椅", "大型音响", "椭圆机", "橱柜",
+                    "除湿机", "制氧机", "大型消毒柜", "酒柜", "展示柜", "梳妆台",
+                    "博古架", "玄关柜", "屏风", "吧台", "划船机", "攀岩墙（小型）",
+                    "深蹲架", "综合训练器", "摩托车", "大型帐篷", "露营车", "皮划艇",
+                    "冲浪板", "潜水装备箱", "便携式烤炉", "钢琴", "大提琴", "架子鼓",
+                    "古筝", "电子琴（大型）", "管风琴", "竖琴", "低音提琴", "大号",
+                    "双排键电子琴", "发电机（小型）", "压缩机", "电焊机", "切割机",
+                    "砂轮机", "台钻", "液压千斤顶", "空气压缩机", "儿童电动车", "滑梯",
+                    "秋千", "大型积木套装", "遥控船", "仿真火车模型", "大型拼图",
+                    "蹦床（小型）", "鱼缸", "保险箱", "轮椅", "大型打印机", "标本箱",
+                    "天文望远镜", "大型投影仪", "3D打印机"
+                ]
+            };
+            
+            const keywordRules = {
+                小件: ["小", "迷你", "微型", "小巧", "便携", "轻"],
+                中件: ["中", "中型", "常规", "标准", "较重"],
+                大件: ["大", "巨型", "大型", "超大", "重型"]
+            };
+            
+            const itemInput = document.getElementById('itemInput');
+            const checkButton = document.getElementById('checkButton');
+            const resultArea = document.getElementById('resultArea');
+            const resultCard = document.getElementById('resultCard');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultSubtitle = document.getElementById('resultSubtitle');
+            const resultDescription = document.getElementById('resultDescription');
+            const resultIcon = document.getElementById('resultIcon');
+            const exampleButtons = document.querySelectorAll('.example-btn');
+            
+            function determineSize(itemName) {
+                if (!itemName || itemName.trim() === '') return null;
+                const normalizedName = itemName.toLowerCase().trim();
+                
+                // 优先判断关键词
+                for (const [size, keywords] of Object.entries(keywordRules)) {
+                    for (const keyword of keywords) {
+                        if (normalizedName.includes(keyword)) return size;
+                    }
+                }
+                
+                // 检查物品数据库
+                for (const [size, items] of Object.entries(itemSizeDatabase)) {
+                    for (const item of items) {
+                        if (normalizedName.includes(item.toLowerCase())) {
+                            // 特殊处理：较重的物品即使在小件数据库中也按中件计算
+                            if (size === "小件" && (normalizedName.includes("重") || 
+                                (normalizedName.includes("公斤") && parseInt(normalizedName.match(/\d+/)) >= 5))) {
+                                return "中件";
+                            }
+                            return size;
+                        }
+                    }
+                }
+                
+                // 重量判断逻辑优化：5-20公斤按中件计算
+                const weightMatch = normalizedName.match(/(\d+)公斤/);
+                if (weightMatch) {
+                    const weight = parseInt(weightMatch[1]);
+                    if (weight >= 5 && weight <= 20) return "中件";
+                    if (weight > 20) return "大件";
+                }
+                
+                // 包含"重"但未明确重量的按中件计算
+                if (normalizedName.includes("重") && !normalizedName.includes("太") && !normalizedName.includes("超")) {
+                    return "中件";
+                }
+                
+                // 其他默认规则
+                if (normalizedName.includes("箱") || normalizedName.includes("盒") && !normalizedName.includes("大")) {
+                    return "中件";
+                }
+                if (normalizedName.includes("大型") || normalizedName.includes("大") || normalizedName.includes("超大")) {
+                    return "大件";
+                }
+                
+                return "小件";
+            }
+            
+            function displayResult(size, itemName) {
+                if (!size) return;
+                
+                resultTitle.textContent = `${itemName} - ${size}`;
+                resultSubtitle.textContent = `尺寸分类结果 · 匹配度100%`;
+                
+                switch(size) {
+                    case "小件":
+                        resultCard.className = "p-6 md:p-8 rounded-2xl border-2 border-small bg-small transition-all-400";
+                        resultIcon.className = "w-16 h-16 rounded-full bg-small flex items-center justify-center text-white text-2xl shadow-md";
+                        resultIcon.innerHTML = '<i class="fa fa-book"></i>';
+                        resultDescription.textContent = `您的物品「${itemName}」属于小件，类似手机、书本大小，重量较轻（5公斤以下），单手可轻松携带。`;
+                        break;
+                        
+                    case "中件":
+                        resultCard.className = "p-6 md:p-8 rounded-2xl border-2 border-medium bg-medium transition-all-400";
+                        resultIcon.className = "w-16 h-16 rounded-full bg-medium flex items-center justify-center text-white text-2xl shadow-md";
+                        resultIcon.innerHTML = '<i class="fa fa-box"></i>';
+                        resultDescription.textContent = `您的物品「${itemName}」属于中件，类似微波炉、小行李箱大小，重量中等（5-20公斤），需双手搬运。`;
+                        break;
+                        
+                    case "大件":
+                        resultCard.className = "p-6 md:p-8 rounded-2xl border-2 border-large bg-large transition-all-400";
+                        resultIcon.className = "w-16 h-16 rounded-full bg-large flex items-center justify-center text-white text-2xl shadow-md";
+                        resultIcon.innerHTML = '<i class="fa fa-cube"></i>';
+                        resultDescription.textContent = `您的物品「${itemName}」属于大件，类似冰箱、床垫大小，重量较大（20公斤以上），通常需要两人协作搬运。`;
+                        break;
+                }
+                
+                resultArea.classList.remove('hidden');
+                resultArea.classList.add('animate-fade-in');
+                resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+            
+            checkButton.addEventListener('click', () => {
+                const itemName = itemInput.value.trim();
+                if (!itemName) {
+                    alert('请输入物品名称（例如：耳机、鱼缸、笔记本电脑）');
+                    return;
+                }
+                const size = determineSize(itemName);
+                displayResult(size, itemName);
+            });
+            
+            itemInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') checkButton.click();
+            });
+            
+            exampleButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const itemName = button.querySelector('p').textContent;
+                    itemInput.value = itemName;
+                    const size = determineSize(itemName);
+                    displayResult(size, itemName);
+                });
+            });
+            
+            document.head.insertAdjacentHTML('beforeend', `
+                <style>
+                    @keyframes fadeIn {
+                        from { opacity: 0; transform: translateY(15px) scale(0.98); }
+                        to { opacity: 1; transform: translateY(0) scale(1); }
+                    }
+                    .animate-fade-in { animation: fadeIn 0.5s ease forwards; }
+                </style>
+            `);
+        </script>
+    </body>
+</html>
+    
